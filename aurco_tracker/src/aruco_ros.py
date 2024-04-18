@@ -8,6 +8,7 @@ import rospy
 from geometry_msgs.msg import Pose, Point, Quaternion
 import argparse
 import yaml
+from tf.transformations import quaternion_from_matrix
 
 def read_calibration_file(calibration_file):
     """ Loads camera matrix and distortion coefficients. """
@@ -45,8 +46,13 @@ def track(matrix_coefficients, distortion_coefficients, square_size):
                 pose_msg.position = Point(*tvec[0][0])  # Set position (from tvec)
 
                 # Convert rvec to Quaternion for orientation
-                rvec_matrix = cv2.Rodrigues(rvec)[0] 
-                quaternion = cv2.RQDecomp3x3(rvec_matrix)[1]
+                rotation_matrix = np.array([[0, 0, 0, 0],
+                            [0, 0, 0, 0],
+                            [0, 0, 0, 0],
+                            [0, 0, 0, 1]],
+                            dtype=float)
+                rotation_matrix[:3, :3], _ = cv2.Rodrigues(rvec)
+                quaternion = quaternion_from_matrix(rotation_matrix)
                 pose_msg.orientation = Quaternion(*quaternion) 
 
                 pose_publisher.publish(pose_msg)  # Publish the pose
