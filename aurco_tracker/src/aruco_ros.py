@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import numpy as np
 import cv2
 import cv2.aruco as aruco
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     parser.add_argument('--square_size', type=float, help='Size of the ArUco marker (in meters)')
     parser.add_argument('--calibration_file', type=str, help='Path to the YAML calibration file')
     args = parser.parse_args()
-
-    matrix_coefficients, distortion_coefficients = read_calibration_file(f"./{args.calibration_file}")
+    directory = os.path.dirname(__file__)
+    matrix_coefficients, distortion_coefficients = read_calibration_file(f"{directory}/{args.calibration_file}")
 
     track(matrix_coefficients, distortion_coefficients, args.square_size)
