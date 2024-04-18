@@ -1,10 +1,12 @@
+#!/usr/bin/env python3
+
 import numpy as np
 import cv2
 import cv2.aruco as aruco
 
 cap = cv2.VideoCapture(0)  # Get the camera source
 
-def track(matrix_coefficients, distortion_coefficients):
+def track(matrix_coefficients, distortion_coefficients,square_size):
     while True:
         ret, frame = cap.read()
         # operations on the frame come here
@@ -17,7 +19,7 @@ def track(matrix_coefficients, distortion_coefficients):
         if np.all(ids is not None):  # If there are markers found by detector
             for i in range(0, len(ids)):  # Iterate in markers
                 # Estimate pose of each marker and return the values rvec and tvec---different from camera coefficients
-                rvec, tvec, markerPoints = aruco.estimatePoseSingleMarkers(corners[i], 0.02, matrix_coefficients,
+                rvec, tvec, markerPoints = aruco.estimatePoseSingleMarkers(corners[i], square_size, matrix_coefficients,
                                                                            distortion_coefficients)
                 print(rvec,tvec)
                 (rvec - tvec).any()  # get rid of that nasty numpy value array error
