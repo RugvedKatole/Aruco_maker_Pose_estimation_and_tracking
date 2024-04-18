@@ -10,12 +10,17 @@ import argparse
 import yaml
 
 def read_calibration_file(calibration_file):
-    """Reads camera calibration data from a YAML file."""
-    with open(calibration_file, 'r') as f:
-        data = yaml.safe_load(f)
-    matrix_coefficients = np.array(data['K']['data']).reshape(3, 3)
-    distortion_coefficients = np.array(data['D']['data']).reshape(1, 5)
-    return matrix_coefficients, distortion_coefficients
+    """ Loads camera matrix and distortion coefficients. """
+    # FILE_STORAGE_READ
+    cv_file = cv2.FileStorage(calibration_file, cv2.FILE_STORAGE_READ)
+
+    # note we also have to specify the type to retrieve other wise we only get a
+    # FileNode object back instead of a matrix
+    camera_matrix = cv_file.getNode("K").mat()
+    dist_matrix = cv_file.getNode("D").mat()
+
+    cv_file.release()
+    return [camera_matrix, dist_matrix]
 
 def track(matrix_coefficients, distortion_coefficients, square_size):
     rospy.init_node('aruco_pose_publisher', anonymous=True)  # Initialize ROS node
