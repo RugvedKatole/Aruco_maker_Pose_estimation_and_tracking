@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import glob
 import argparse
+import os
 
 # termination criteria
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -64,6 +65,52 @@ def load_coefficients(path):
     cv_file.release()
     return [camera_matrix, dist_matrix]
 
+def take_images(folder_path,prefix):
+
+    # Folder path where you want to save the images
+    # folder_path = 'my_captured_images'  
+
+    # Create the folder if it doesn't exist
+    os.makedirs(folder_path, exist_ok=True)
+
+    # Initialize camera
+    camera = cv2.VideoCapture(0)  # Use 0 for the default webcam
+
+    # Check if camera opened successfully
+    if not camera.isOpened():
+        print("Error opening camera")
+        exit()
+
+    image_count = 0
+
+    while True:
+        ret, frame = camera.read()
+
+        # Display the camera feed
+        cv2.imshow('Camera', frame)
+
+        key = cv2.waitKey(1) & 0xFF  
+
+        # Press 'c' to capture an image
+        if key == ord('c'):
+            image_name = f'{prefix}{image_count}.jpg'
+            image_path = os.path.join(folder_path, image_name)
+            cv2.imwrite(image_path, frame)
+            print(f'Image saved: {image_name}')
+            image_count += 1
+
+            if image_count >= 25:
+                print("Captured 25 images. Exiting...")
+                break
+
+        # Press 'q' to quit    
+        elif key == ord('q'):
+            break
+
+    # Release resources
+    camera.release()
+    cv2.destroyAllWindows()
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Camera calibration')
     parser.add_argument('--image_dir', type=str, required=True, help='image directory path')
@@ -73,8 +120,10 @@ if __name__ == '__main__':
     parser.add_argument('--width', type=int, required=False, help='chessboard width size, default is 9')
     parser.add_argument('--height', type=int, required=False, help='chessboard height size, default is 6')
     parser.add_argument('--save_file', type=str, required=True, help='YML file to save calibration matrices')
-
+    parser.add_argument('--capture', type=bool, required=True, help='If calibration images need to be taken before calibration')
     args = parser.parse_args()
+    if args.capture:
+        take_images(args.image_dir,args.prefix)
     ret, mtx, dist, rvecs, tvecs = calibrate(args.image_dir, args.prefix, args.image_format, args.square_size, args.width, args.height)
     save_coefficients(mtx, dist, args.save_file)
     print("Calibration is finished. RMS: ", ret)
